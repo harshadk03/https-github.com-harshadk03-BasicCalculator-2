@@ -9,14 +9,13 @@ import SwiftUI
 
 // MARK: - Enum for Calculator Button Types
 enum CalculatorButton: String {
-    // Different calculator button types with their respective labels
     case zero = "0"
     case one  = "1"
     case two = "2"
     case three = "3"
     case four = "4"
     case five = "5"
-    case six =  "6"
+    case six = "6"
     case seven = "7"
     case eight = "8"
     case nine = "9"
@@ -30,15 +29,15 @@ enum CalculatorButton: String {
     case percent = "%"
     case toggleSign = "+/-"
     
-    // MARK: - Button Colors Based on Type
-    var ButtonColor: Color {
+    // MARK: - Dynamic Button Colors for Light/Dark Mode
+    func ButtonColor(for colorScheme: ColorScheme) -> Color {
         switch self {
         case .add, .subtract, .multiply, .divide, .equals:
-            return .orange // Operators and equals button are orange
+            return colorScheme == .light ? .orange : .orange // Bright colors for operators
         case .clear, .percent, .toggleSign:
-            return Color(.lightGray) // Utility buttons are light gray
+            return colorScheme == .light ? Color(.lightGray) : Color(.lightGray) // Neutral tones
         default:
-            return Color(.black) // Number buttons are black
+            return colorScheme == .light ? .black : Color(.darkGray) // Numbers adapt to mode
         }
     }
 }
@@ -48,7 +47,6 @@ struct MainCalculator: View {
     
     // MARK: - Button Layout
     let buttons: [[CalculatorButton]] = [
-        // Define button rows as 2D array
         [.clear, .toggleSign, .percent, .divide],
         [.seven, .eight, .nine, .multiply],
         [.four, .five, .six, .subtract],
@@ -56,54 +54,62 @@ struct MainCalculator: View {
         [.zero, .decimal, .equals],
     ]
     
+    // Access the current color scheme
+    @Environment(\.colorScheme) var colorScheme
+    
     // MARK: - Body
     var body: some View {
         
-        VStack {
-            Spacer() // Push everything to the bottom
-            
-            // MARK: - Title Section
-            HStack {
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text("Title 2")
-                        .font(.title2) // Smaller title
-                        .foregroundColor(.gray)
-                    Text("Large Title")
-                        .font(.largeTitle) // Large title
-                        .fontWeight(.bold)
-                        .foregroundColor(.black)
-                }
-                .frame(maxWidth: .infinity, alignment: .trailing) // Right-align and span full width
-            }
-            .frame(maxWidth: .infinity) // Ensure HStack fills the available width
-            //.background(Color.blue.opacity(0.1)) // Add a light blue background for visualization
-            
-            // MARK: - Keypad Section
-            ForEach(buttons, id: \.self) { row in
+        NavigationView {
+            VStack {
+                Spacer() // Push everything to the bottom
+                
+                // MARK: - Title Section
                 HStack {
-                    ForEach(row, id: \.self) { item in
-                        Button(action: {
-                            // Action for button press
-                        }, label: {
-                            Text(item.rawValue) // Button label (e.g., "1", "+", etc.)
-                                .frame(
-                                    width: self.buttonWidth(item: item), // Dynamically calculated width
-                                    height: self.buttonheight(item: item) // Dynamically calculated height
-                                )
-                                .background(item.ButtonColor) // Background color based on button type
-                                .foregroundColor(.white) // Text color is white
-                                .font(.title) // Font size for the button label
-                                .fontWeight(.medium) // Medium font weight
-                                .clipShape(RoundedRectangle(cornerRadius: 6)) // Rounded rectangle shape
-                        })
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("Title 2")
+                            .font(.title2)
+                            .foregroundColor(.secondary) // Dynamically adapt to light/dark mode
+                        Text("Large Title")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary) // Dynamically adapt to light/dark mode
                     }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
                 }
-                .frame(maxWidth: .infinity) // Ensure keypad row fills available space
+                .frame(maxWidth: .infinity)
+                //.background(colorScheme == .light ? Color(.systemGray6) : Color(.systemGray4)) // Adaptive background
+                
+                // MARK: - Keypad Section
+                ForEach(buttons, id: \.self) { row in
+                    HStack {
+                        ForEach(row, id: \.self) { item in
+                            Button(action: {
+                                // Button action
+                            }, label: {
+                                Text(item.rawValue)
+                                    .frame(
+                                        width: self.buttonWidth(item: item),
+                                        height: self.buttonheight(item: item)
+                                    )
+                                    .background(item.ButtonColor(for: colorScheme)) // Adaptive button color
+                                    .foregroundColor(colorScheme == .light ? .white : .white) // Adaptive text color
+                                    .font(.title)
+                                    .fontWeight(.medium)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                            })
+                        }
+                    }
+        
+                    .frame(maxWidth: .infinity)
+                }
+                //.border(colorScheme == .light ? .black : .white, width: 1) // Border adapts to mode
             }
-            //.border(.black, width: 1) // Add border to keypad section for debugging layout
+            .padding(24)
+            .background(colorScheme == .light ? Color(.white) : Color(.black)) // Full view background adapts
+            
         }
-        //.border(.black, width: 1) // Add border to overall view for debugging layout
-        .padding(24) // Add padding around the entire view (titles + keypad)
+        //.border(colorScheme == .light ? .black : .white, width: 1) // Border adapts to mode
     }
     
     // MARK: - Button Width Calculation
@@ -113,20 +119,14 @@ struct MainCalculator: View {
             let equalsWidth = (UIScreen.main.bounds.width - (3 * 16)) / 2
             return equalsWidth
         }
-        // Standard button width (1/4th of available width minus spacing)
+        // Standard button width
         let standardWidth = (UIScreen.main.bounds.width - (4 * 16)) / 4
         return standardWidth
     }
 
     // MARK: - Button Height Calculation
-    func buttonHeight() -> CGFloat {
-        // Standard button height
-        return (UIScreen.main.bounds.width - (5 * 16)) / 4
-    }
-    
-    // MARK: - Alternative Button Height Calculation (Unused)
     func buttonheight(item: CalculatorButton) -> CGFloat {
-        // Dynamically calculate height for each button
+        // Standard button height
         return (UIScreen.main.bounds.width - (5 * 16)) / 4
     }
 }
