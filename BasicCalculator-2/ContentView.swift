@@ -45,6 +45,14 @@ enum CalculatorButton: String {
 // MARK: - Main View for the Calculator
 struct MainCalculator: View {
     
+    // MARK: - State Variables
+    @State private var input: String = "0"      // Current input displayed in the calculator
+    @State private var result: String = ""      // Current result displayed below the input
+    @State private var isNewCalculation: Bool = true // Tracks if the last operation was completed
+    
+    // MARK: - Dependencies
+    private let engine = CalculatorEngine()     // CalculatorEngine instance for logic
+    
     // MARK: - Button Layout
     let buttons: [[CalculatorButton]] = [
         [.clear, .toggleSign, .percent, .divide],
@@ -59,33 +67,31 @@ struct MainCalculator: View {
     
     // MARK: - Body
     var body: some View {
-        
         NavigationView {
             VStack {
                 Spacer() // Push everything to the bottom
                 
-                // MARK: - Title Section
-                HStack {
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Text("Title 2")
+                // MARK: - Display Section
+                VStack(alignment: .trailing, spacing: 4) {
+                    if !result.isEmpty {
+                        Text(result) // Display the calculation history
                             .font(.title2)
-                            .foregroundColor(.secondary) // Dynamically adapt to light/dark mode
-                        Text("Large Title")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundColor(.primary) // Dynamically adapt to light/dark mode
+                            .foregroundColor(.secondary)
                     }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    Text(input) // Display the current input or result
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
                 }
-                .frame(maxWidth: .infinity)
-                //.background(colorScheme == .light ? Color(.systemGray6) : Color(.systemGray4)) // Adaptive background
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                //.padding(.horizontal, 24)
                 
                 // MARK: - Keypad Section
                 ForEach(buttons, id: \.self) { row in
                     HStack {
                         ForEach(row, id: \.self) { item in
                             Button(action: {
-                                // Button action
+                                handleButtonTap(item) // Call the action handler
                             }, label: {
                                 Text(item.rawValue)
                                     .frame(
@@ -100,16 +106,12 @@ struct MainCalculator: View {
                             })
                         }
                     }
-        
                     .frame(maxWidth: .infinity)
                 }
-                //.border(colorScheme == .light ? .black : .white, width: 1) // Border adapts to mode
             }
             .padding(24)
             .background(colorScheme == .light ? Color(.white) : Color(.black)) // Full view background adapts
-            
         }
-        //.border(colorScheme == .light ? .black : .white, width: 1) // Border adapts to mode
     }
     
     // MARK: - Button Width Calculation
@@ -129,9 +131,95 @@ struct MainCalculator: View {
         // Standard button height
         return (UIScreen.main.bounds.width - (5 * 16)) / 4
     }
-}
+    
+    // MARK: - Button Tap Handling
+    private func handleButtonTap(_ button: CalculatorButton) {
+        switch button {
+        case .clear:
+            clearOrDeleteInput()
+        case .toggleSign:
+            toggleSign()
+        case .percent:
+            applyPercentage()
+        case .equals:
+            calculateResult()
+        case .add, .subtract, .multiply, .divide:
+            appendOperator(button.rawValue)
+        case .decimal:
+            appendDecimal()
+        default:
+            appendNumber(button.rawValue)
+        }
+    }
+    
+    // MARK: - Button Actions
+    private func appendNumber(_ number: String) {
+        if isNewCalculation || input == "0" {
+            input = number
+            isNewCalculation = false
+        } else {
+            input += number
+        }
+        engine.append(number)
+    }
 
-// MARK: - Preview
-#Preview {
-    MainCalculator()
+    private func appendOperator(_ op: String) {
+        if input.last?.isWhitespace ?? false || "+-×÷".contains(input.last ?? " ") {
+            return
+        }
+        input += " \(op) "
+        engine.appendOperator(op)
+        isNewCalculation = false
+    }
+
+    private func appendDecimal() {
+        if isNewCalculation {
+            input = "0."
+            isNewCalculation = false
+        } else if !input.contains(".") {
+            let lastToken = input.components(separatedBy: " ").last ?? ""
+            if lastToken.isEmpty || "+-×÷".contains(lastToken) {
+                input += "0."
+            } else if !lastToken.contains(".") {
+                input += "."
+            }
+        }
+        engine.append(".")
+    }
+
+    private func clearOrDeleteInput() {
+        if isNewCalculation || input == "0" {
+            input = "0"
+            result = ""
+            isNewCalculation = true
+            engine.clear()
+        } else {
+            input.removeLast()
+            if input.isEmpty { input = "0" }
+        }
+    }
+
+    private func toggleSign() {
+        if let value = Double(input) {
+            input = String(value * -1)
+        }
+    }
+
+    private func applyPercentage() {
+        if let value = Double(input) {
+            input = String(value / 100)
+        }
+    }
+
+    private func calculateResult() {
+        if "+-×÷".contains(input.last ?? " ") || input.isEmpty {
+            input = "Error"
+            result = ""
+            isNewCalculation = true
+        } else {
+            result = input
+            input = engine.evaluateExpression(input)
+            isNewCalculation = true
+        }
+    }
 }
