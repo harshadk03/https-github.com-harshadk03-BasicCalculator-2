@@ -84,17 +84,52 @@ struct MainCalculator: View {
                             .font(.system(size: 24))
                             .dynamicTypeSize(.medium ... .xxLarge) // Limit scaling
                             .foregroundColor(.secondary)
+                            .lineLimit(1) // Ensure text stays on one line
+                            .minimumScaleFactor(0.3) // Scale font down to 30% of original size if needed
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                            .truncationMode(.head) // Truncate from the head if text still overflows
                     }
                     Text(input) // Display the current input or result
                         .font(.system(size: 64))
                         .dynamicTypeSize(.medium ... .xxLarge) // Limit scaling
                         .fontWeight(.bold)
                         .foregroundColor(.primary)
+                        .lineLimit(1) // Ensure text stays on one line
+                        .minimumScaleFactor(0.3) // Scale font down to 30% of original size if needed
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .truncationMode(.head) // Truncate from the head if text still overflows
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 //.padding(.horizontal, 24)
                 
-                
+                // MARK: - Keypad Section
+                GeometryReader{ geometry in
+                    VStack(spacing: 8) {
+                        ForEach(buttons, id: \.self) { row in
+                            HStack(spacing: 8) {
+                                ForEach(row, id: \.self) { item in
+                                    Button(action: {
+                                        handleButtonTap(item) // Call the action handler
+                                    }) {
+                                        Text(item == .clear ? buttonLabel : item.rawValue) // Dynamic label for "AC" or "C"
+                                            .frame(
+                                                width: self.buttonWidth(item: item, geometry: geometry),
+                                                height: self.buttonHeight(geometry: geometry)
+                                            )
+                                            .background(item.ButtonColor(for: colorScheme)) // Adaptive button color
+                                            .foregroundColor(.white) // Text color
+                                            .font(.title)
+                                            .fontWeight(.medium)
+                                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .frame(maxHeight: geometry.size.height * 0.6) // Set keypad to 60% of total height
+                    .padding(8)
+                }
+                /*
                 // MARK: - Keypad Section
                 ForEach(buttons, id: \.self) { row in
                     HStack {
@@ -124,6 +159,7 @@ struct MainCalculator: View {
                     }
                     .frame(maxWidth: .infinity)
                 }
+                */
                 /*
                 // MARK: - Keypad Section
                 ForEach(buttons, id: \.self) { row in
@@ -149,22 +185,51 @@ struct MainCalculator: View {
                 }
                 */
             }
-            .padding(24)
+            .padding(16)
             .background(colorScheme == .light ? Color(.white) : Color(.black)) // Full view background adapts
         }
     }
     
     // MARK: - Button Width Calculation
-    func buttonWidth(item: CalculatorButton) -> CGFloat {
+    func buttonWidth(item: CalculatorButton, geometry: GeometryProxy) -> CGFloat {
         if item == .equals {
             // Equals button spans two columns
-            let equalsWidth = (UIScreen.main.bounds.width - (3 * 16)) / 2
-            return equalsWidth
+            return (geometry.size.width - (4 * 8)) / 2 // 4 buttons, 8 spacing
         }
         // Standard button width
-        let standardWidth = (UIScreen.main.bounds.width - (4 * 16)) / 4
-        return standardWidth
+        return (geometry.size.width - (5 * 8)) / 4 // 4 buttons, 8 spacing
     }
+
+    
+    func buttonHeight(geometry: GeometryProxy) -> CGFloat {
+        let totalHeight = geometry.size.height * 0.6 // Keypad is 60% of total height
+        return totalHeight / CGFloat(buttons.count) // Divide by the number of rows
+    }
+    
+    /* Old button height funcation
+     func buttonHeight(geometry: GeometryProxy) -> CGFloat {
+         // Adjust the button height based on screen height
+         return (geometry.size.height - (5 * 8)) / 5 // 5 rows, 8 spacing
+     }
+     */
+    // MARK: - Button Height Calculation
+    
+    
+    /* Old button with calculation funcation
+     // MARK: - Button Width Calculation
+     func buttonWidth(item: CalculatorButton) -> CGFloat {
+         if item == .equals {
+             // Equals button spans two columns
+             let equalsWidth = (UIScreen.main.bounds.width - (3 * 16)) / 2
+             return equalsWidth
+         }
+         // Standard button width
+         let standardWidth = (UIScreen.main.bounds.width - (4 * 16)) / 4
+         return standardWidth
+     }
+     
+     */
+    
 
     // MARK: - Button Height Calculation
     func buttonheight(item: CalculatorButton) -> CGFloat {
