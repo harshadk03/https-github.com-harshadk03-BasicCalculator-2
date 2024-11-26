@@ -67,7 +67,7 @@ struct MainCalculator: View {
                                         .fontWeight(.bold)
                                         .foregroundColor(.black)
                                 }
-                                .padding(.trailing, 20) // Add some padding on the right
+                                .padding(.trailing, 32) // Add some padding on the right
                             }
 
                 //Other buttons
@@ -83,8 +83,8 @@ struct MainCalculator: View {
                                     )
                                     .background(item.ButtonColor)
                                     .foregroundColor(.white)
-                                    .font(.largeTitle)
-                                    .fontWeight(.bold)
+                                    .font(.title)
+                                    .fontWeight(.medium)
                                     .clipShape(RoundedRectangle(cornerRadius: 8))
                             })
                         }
@@ -96,20 +96,20 @@ struct MainCalculator: View {
     
     func buttonWidth(item: CalculatorButton) -> CGFloat {
         if item == .equals {
-            let zeroWidth = (UIScreen.main.bounds.width - (3 * 16)) / 2
+            let zeroWidth = (UIScreen.main.bounds.width - (3 * 20)) / 2
             return zeroWidth
         }
         
-        let standardWidth = (UIScreen.main.bounds.width - (4 * 16)) / 4
+        let standardWidth = (UIScreen.main.bounds.width - (4 * 20)) / 4
         return standardWidth
     }
 
     func buttonHeight() -> CGFloat {
-        return (UIScreen.main.bounds.width - (5*12)) / 4
+        return (UIScreen.main.bounds.width - (5*20)) / 4
     }
     
     func buttonheight(item: CalculatorButton) -> CGFloat {
-        return (UIScreen.main.bounds.width - (5*16)) / 4
+        return (UIScreen.main.bounds.width - (5*20)) / 4
     }
 }
 
