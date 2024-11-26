@@ -65,6 +65,12 @@ struct MainCalculator: View {
     // Access the current color scheme
     @Environment(\.colorScheme) var colorScheme
     
+    // MARK: - Computed Properties
+    /// Determines the label for the clear button ("AC" or "C").
+    private var buttonLabel: String {
+        return isNewCalculation || input == "0" ? "AC" : "C"
+    }
+    
     // MARK: - Body
     var body: some View {
         NavigationView {
@@ -75,17 +81,50 @@ struct MainCalculator: View {
                 VStack(alignment: .trailing, spacing: 4) {
                     if !result.isEmpty {
                         Text(result) // Display the calculation history
-                            .font(.title2)
+                            .font(.system(size: 24))
+                            .dynamicTypeSize(.medium ... .xxLarge) // Limit scaling
                             .foregroundColor(.secondary)
                     }
                     Text(input) // Display the current input or result
-                        .font(.largeTitle)
+                        .font(.system(size: 64))
+                        .dynamicTypeSize(.medium ... .xxLarge) // Limit scaling
                         .fontWeight(.bold)
                         .foregroundColor(.primary)
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 //.padding(.horizontal, 24)
                 
+                
+                // MARK: - Keypad Section
+                ForEach(buttons, id: \.self) { row in
+                    HStack {
+                        ForEach(row, id: \.self) { item in
+                            Button(action: {
+                                handleButtonTap(item) // Call the action handler for single tap
+                            }) {
+                                Text(item == .clear ? buttonLabel : item.rawValue) // Dynamic label for "AC" or "C"
+                                    .frame(
+                                        width: self.buttonWidth(item: item),
+                                        height: self.buttonheight(item: item)
+                                    )
+                                    .background(item.ButtonColor(for: colorScheme)) // Adaptive button color
+                                    .foregroundColor(.white) // Text color
+                                    .font(.title)
+                                    .fontWeight(.medium)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                            }
+                            .simultaneousGesture(
+                                LongPressGesture().onEnded { _ in
+                                    if item == .clear {
+                                        clearInput() // Long press clears everything if the button is "C/AC"
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                /*
                 // MARK: - Keypad Section
                 ForEach(buttons, id: \.self) { row in
                     HStack {
@@ -93,7 +132,7 @@ struct MainCalculator: View {
                             Button(action: {
                                 handleButtonTap(item) // Call the action handler
                             }, label: {
-                                Text(item.rawValue)
+                                Text(item == .clear ? buttonLabel : item.rawValue) // Use dynamic label for clear button
                                     .frame(
                                         width: self.buttonWidth(item: item),
                                         height: self.buttonheight(item: item)
@@ -108,6 +147,7 @@ struct MainCalculator: View {
                     }
                     .frame(maxWidth: .infinity)
                 }
+                */
             }
             .padding(24)
             .background(colorScheme == .light ? Color(.white) : Color(.black)) // Full view background adapts
@@ -153,6 +193,27 @@ struct MainCalculator: View {
     }
     
     // MARK: - Button Actions
+    private func clearOrDeleteInput() {
+        
+        if buttonLabel == "AC" {
+            // Fully reset the calculator when AC is tapped
+            clearInput()
+        } else if input != "0" {
+            // Remove the last character if C is tapped
+            input.removeLast()
+            if input.isEmpty { input = "0" } // Reset to 0 if empty
+        } else {
+            // If input is already 0, do nothing
+        }
+    }
+    
+    private func clearInput() {
+        input = "0"
+        result = ""
+        isNewCalculation = true
+        engine.clear()
+    }
+
     private func appendNumber(_ number: String) {
         if isNewCalculation || input == "0" {
             input = number
@@ -187,18 +248,6 @@ struct MainCalculator: View {
         engine.append(".")
     }
 
-    private func clearOrDeleteInput() {
-        if isNewCalculation || input == "0" {
-            input = "0"
-            result = ""
-            isNewCalculation = true
-            engine.clear()
-        } else {
-            input.removeLast()
-            if input.isEmpty { input = "0" }
-        }
-    }
-
     private func toggleSign() {
         if let value = Double(input) {
             input = String(value * -1)
@@ -223,3 +272,33 @@ struct MainCalculator: View {
         }
     }
 }
+
+
+
+/*
+ Old code
+ 
+ 
+ // MARK: - Display Section
+ VStack(alignment: .trailing, spacing: 4) {
+     if !result.isEmpty {
+         Text(result) // Display the calculation history
+             .font(.system(size: 24))
+             .dynamicTypeSize(.medium ... .xxLarge) // Limit scaling
+             .foregroundColor(.secondary)
+     }
+     Text(input) // Display the current input or result
+         .font(.system(size: 64))
+         .dynamicTypeSize(.medium ... .xxLarge) // Limit scaling
+         .fontWeight(.bold)
+         .foregroundColor(.primary)
+ }
+ .frame(maxWidth: .infinity, alignment: .trailing)
+ //.padding(.horizontal, 24)
+ 
+ 
+ 
+ 
+ Clear or delete input old
+ 
+ */

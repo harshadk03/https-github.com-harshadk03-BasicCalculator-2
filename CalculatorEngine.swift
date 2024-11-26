@@ -50,6 +50,49 @@ class CalculatorEngine {
     /// Evaluates the current expression and returns the result.
     /// - Parameter input: The mathematical expression to evaluate.
     /// - Returns: The result of the evaluation as a string.
+    func evaluateExpression(_ expression: String) -> String {
+        // Replace mathematical symbols with `NSExpression`-compatible ones
+        let formattedExpression = expression
+            .replacingOccurrences(of: "÷", with: "/")
+            .replacingOccurrences(of: "×", with: "*")
+            .replacingOccurrences(of: "-", with: "-")
+            .replacingOccurrences(of: "+", with: "+")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        print("Formatted Expression: \(formattedExpression)") // Debugging input
+        
+        // Split the expression into components for manual evaluation as a fallback
+        let components = formattedExpression.split(separator: " ").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+        // Check for simple cases with manual division and multiplication
+        if components.count == 3 {
+            if let first = Double(components[0]),
+               let second = Double(components[2]) {
+                switch components[1] {
+                case "/":
+                    guard second != 0 else { return "Error" } // Division by zero
+                    let result = first / second
+                    return String(format: "%.12g", result)
+                case "*":
+                    let result = first * second
+                    return String(format: "%.12g", result)
+                default:
+                    break
+                }
+            }
+        }
+        
+        // Attempt to evaluate using `NSExpression`
+        let mathExpression = NSExpression(format: formattedExpression)
+        if let result = mathExpression.expressionValue(with: nil, context: nil) as? NSNumber {
+            // Format the result to avoid scientific notation for whole numbers
+            return String(format: "%.12g", result.doubleValue)
+        } else {
+            print("Error: Unable to cast result to NSNumber")
+            return "Error"
+        }
+    }
+    /*
     func evaluateExpression(_ input: String) -> String {
         let sanitizedInput = input
             .replacingOccurrences(of: "×", with: "*")
@@ -62,6 +105,7 @@ class CalculatorEngine {
             return "Error"
         }
     }
+    */
     
     // MARK: - Private Helpers
     
