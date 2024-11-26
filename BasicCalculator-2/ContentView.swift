@@ -59,10 +59,10 @@ struct MainCalculator: View {
                             HStack {
                                 Spacer() // Pushes the text to the right
                                 VStack(alignment: .trailing, spacing: 8) {
-                                    Text("Small")
-                                        .font(.title)
+                                    Text("Title 2")
+                                        .font(.title2)
                                         .foregroundColor(.gray)
-                                    Text("Big")
+                                    Text("Large Title")
                                         .font(.largeTitle)
                                         .fontWeight(.bold)
                                         .foregroundColor(.black)
