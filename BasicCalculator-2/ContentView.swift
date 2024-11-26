@@ -33,11 +33,11 @@ enum CalculatorButton: String {
     func ButtonColor(for colorScheme: ColorScheme) -> Color {
         switch self {
         case .add, .subtract, .multiply, .divide, .equals:
-            return colorScheme == .light ? .orange : .orange // Bright colors for operators
+            return .orange // Bright orange for operators
         case .clear, .percent, .toggleSign:
-            return colorScheme == .light ? Color(.lightGray) : Color(.lightGray) // Neutral tones
+            return .gray // Neutral tones for actions
         default:
-            return colorScheme == .light ? .black : Color(.darkGray) // Numbers adapt to mode
+            return colorScheme == .light ? .black : Color(.darkGray) // Numbers adapt to the mode
         }
     }
 }
@@ -79,31 +79,32 @@ struct MainCalculator: View {
                 
                 // MARK: - Display Section
                 VStack(alignment: .trailing, spacing: 4) {
+                    // History (result display)
                     if !result.isEmpty {
-                        Text(result) // Display the calculation history
+                        Text(result)
                             .font(.system(size: 24))
-                            .dynamicTypeSize(.medium ... .xxLarge) // Limit scaling
+                            .dynamicTypeSize(.medium ... .xxLarge)
                             .foregroundColor(.secondary)
-                            .lineLimit(1) // Ensure text stays on one line
-                            .minimumScaleFactor(0.3) // Scale font down to 30% of original size if needed
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.3)
                             .frame(maxWidth: .infinity, alignment: .trailing)
-                            .truncationMode(.head) // Truncate from the head if text still overflows
+                            .truncationMode(.head)
                     }
-                    Text(input) // Display the current input or result
+                    // Current Input
+                    Text(input)
                         .font(.system(size: 64))
-                        .dynamicTypeSize(.medium ... .xxLarge) // Limit scaling
+                        .dynamicTypeSize(.medium ... .xxLarge)
                         .fontWeight(.bold)
                         .foregroundColor(.primary)
-                        .lineLimit(1) // Ensure text stays on one line
-                        .minimumScaleFactor(0.3) // Scale font down to 30% of original size if needed
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.3)
                         .frame(maxWidth: .infinity, alignment: .trailing)
-                        .truncationMode(.head) // Truncate from the head if text still overflows
+                        .truncationMode(.head)
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
-                //.padding(.horizontal, 24)
                 
                 // MARK: - Keypad Section
-                GeometryReader{ geometry in
+                GeometryReader { geometry in
                     VStack(spacing: 8) {
                         ForEach(buttons, id: \.self) { row in
                             HStack(spacing: 8) {
@@ -111,79 +112,31 @@ struct MainCalculator: View {
                                     Button(action: {
                                         handleButtonTap(item) // Call the action handler
                                     }) {
-                                        Text(item == .clear ? buttonLabel : item.rawValue) // Dynamic label for "AC" or "C"
+                                        Text(item == .clear ? buttonLabel : item.rawValue)
                                             .frame(
                                                 width: self.buttonWidth(item: item, geometry: geometry),
                                                 height: self.buttonHeight(geometry: geometry)
                                             )
-                                            .background(item.ButtonColor(for: colorScheme)) // Adaptive button color
-                                            .foregroundColor(.white) // Text color
+                                            .background(item.ButtonColor(for: colorScheme))
+                                            .foregroundColor(.white)
                                             .font(.title)
                                             .fontWeight(.medium)
                                             .clipShape(RoundedRectangle(cornerRadius: 10))
                                     }
+                                    .simultaneousGesture(
+                                        LongPressGesture().onEnded { _ in
+                                            if item == .clear {
+                                                clearInput() // Long press clears everything
+                                            }
+                                        }
+                                    )
                                 }
                             }
                         }
                     }
-                    .frame(maxHeight: geometry.size.height * 0.6) // Set keypad to 60% of total height
+                    .frame(maxHeight: geometry.size.height * 0.6) // Keypad uses 60% of total height
                     .padding(8)
                 }
-                /*
-                // MARK: - Keypad Section
-                ForEach(buttons, id: \.self) { row in
-                    HStack {
-                        ForEach(row, id: \.self) { item in
-                            Button(action: {
-                                handleButtonTap(item) // Call the action handler for single tap
-                            }) {
-                                Text(item == .clear ? buttonLabel : item.rawValue) // Dynamic label for "AC" or "C"
-                                    .frame(
-                                        width: self.buttonWidth(item: item),
-                                        height: self.buttonheight(item: item)
-                                    )
-                                    .background(item.ButtonColor(for: colorScheme)) // Adaptive button color
-                                    .foregroundColor(.white) // Text color
-                                    .font(.title)
-                                    .fontWeight(.medium)
-                                    .clipShape(RoundedRectangle(cornerRadius: 1000))
-                            }
-                            .simultaneousGesture(
-                                LongPressGesture().onEnded { _ in
-                                    if item == .clear {
-                                        clearInput() // Long press clears everything if the button is "C/AC"
-                                    }
-                                }
-                            )
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                */
-                /*
-                // MARK: - Keypad Section
-                ForEach(buttons, id: \.self) { row in
-                    HStack {
-                        ForEach(row, id: \.self) { item in
-                            Button(action: {
-                                handleButtonTap(item) // Call the action handler
-                            }, label: {
-                                Text(item == .clear ? buttonLabel : item.rawValue) // Use dynamic label for clear button
-                                    .frame(
-                                        width: self.buttonWidth(item: item),
-                                        height: self.buttonheight(item: item)
-                                    )
-                                    .background(item.ButtonColor(for: colorScheme)) // Adaptive button color
-                                    .foregroundColor(colorScheme == .light ? .white : .white) // Adaptive text color
-                                    .font(.title)
-                                    .fontWeight(.medium)
-                                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                            })
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                */
             }
             .padding(16)
             .background(colorScheme == .light ? Color(.white) : Color(.black)) // Full view background adapts
@@ -193,48 +146,15 @@ struct MainCalculator: View {
     // MARK: - Button Width Calculation
     func buttonWidth(item: CalculatorButton, geometry: GeometryProxy) -> CGFloat {
         if item == .equals {
-            // Equals button spans two columns
-            return (geometry.size.width - (4 * 8)) / 2 // 4 buttons, 8 spacing
+            return (geometry.size.width - (4 * 8)) / 2 // Equals button spans two columns
         }
-        // Standard button width
-        return (geometry.size.width - (5 * 8)) / 4 // 4 buttons, 8 spacing
+        return (geometry.size.width - (5 * 8)) / 4 // Standard button width
     }
 
-    
+    // MARK: - Button Height Calculation
     func buttonHeight(geometry: GeometryProxy) -> CGFloat {
         let totalHeight = geometry.size.height * 0.6 // Keypad is 60% of total height
         return totalHeight / CGFloat(buttons.count) // Divide by the number of rows
-    }
-    
-    /* Old button height funcation
-     func buttonHeight(geometry: GeometryProxy) -> CGFloat {
-         // Adjust the button height based on screen height
-         return (geometry.size.height - (5 * 8)) / 5 // 5 rows, 8 spacing
-     }
-     */
-    // MARK: - Button Height Calculation
-    
-    
-    /* Old button with calculation funcation
-     // MARK: - Button Width Calculation
-     func buttonWidth(item: CalculatorButton) -> CGFloat {
-         if item == .equals {
-             // Equals button spans two columns
-             let equalsWidth = (UIScreen.main.bounds.width - (3 * 16)) / 2
-             return equalsWidth
-         }
-         // Standard button width
-         let standardWidth = (UIScreen.main.bounds.width - (4 * 16)) / 4
-         return standardWidth
-     }
-     
-     */
-    
-
-    // MARK: - Button Height Calculation
-    func buttonheight(item: CalculatorButton) -> CGFloat {
-        // Standard button height
-        return (UIScreen.main.bounds.width - (5 * 16)) / 4
     }
     
     // MARK: - Button Tap Handling
@@ -259,16 +179,11 @@ struct MainCalculator: View {
     
     // MARK: - Button Actions
     private func clearOrDeleteInput() {
-        
         if buttonLabel == "AC" {
-            // Fully reset the calculator when AC is tapped
-            clearInput()
+            clearInput() // Reset calculator
         } else if input != "0" {
-            // Remove the last character if C is tapped
-            input.removeLast()
-            if input.isEmpty { input = "0" } // Reset to 0 if empty
-        } else {
-            // If input is already 0, do nothing
+            input.removeLast() // Remove the last character
+            if input.isEmpty { input = "0" }
         }
     }
     
@@ -337,33 +252,3 @@ struct MainCalculator: View {
         }
     }
 }
-
-
-
-/*
- Old code
- 
- 
- // MARK: - Display Section
- VStack(alignment: .trailing, spacing: 4) {
-     if !result.isEmpty {
-         Text(result) // Display the calculation history
-             .font(.system(size: 24))
-             .dynamicTypeSize(.medium ... .xxLarge) // Limit scaling
-             .foregroundColor(.secondary)
-     }
-     Text(input) // Display the current input or result
-         .font(.system(size: 64))
-         .dynamicTypeSize(.medium ... .xxLarge) // Limit scaling
-         .fontWeight(.bold)
-         .foregroundColor(.primary)
- }
- .frame(maxWidth: .infinity, alignment: .trailing)
- //.padding(.horizontal, 24)
- 
- 
- 
- 
- Clear or delete input old
- 
- */
