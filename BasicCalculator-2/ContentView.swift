@@ -111,7 +111,7 @@ struct MainCalculator: View {
                                     .foregroundColor(.white) // Text color
                                     .font(.title)
                                     .fontWeight(.medium)
-                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                                    .clipShape(RoundedRectangle(cornerRadius: 1000))
                             }
                             .simultaneousGesture(
                                 LongPressGesture().onEnded { _ in
@@ -228,7 +228,7 @@ struct MainCalculator: View {
         if input.last?.isWhitespace ?? false || "+-×÷".contains(input.last ?? " ") {
             return
         }
-        input += " \(op) "
+        input += op
         engine.appendOperator(op)
         isNewCalculation = false
     }

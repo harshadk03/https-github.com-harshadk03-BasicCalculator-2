@@ -50,6 +50,108 @@ class CalculatorEngine {
     /// Evaluates the current expression and returns the result.
     /// - Parameter input: The mathematical expression to evaluate.
     /// - Returns: The result of the evaluation as a string.
+    /// Evaluates the current expression and returns the result.
+    /// - Parameter expression: The mathematical expression to evaluate.
+    /// - Returns: The result of the evaluation as a string.
+    func evaluateExpression(_ expression: String) -> String {
+        // Replace mathematical symbols with `NSExpression`-compatible ones
+        let formattedExpression = expression
+            .replacingOccurrences(of: "÷", with: "/")
+            .replacingOccurrences(of: "×", with: "*")
+            .replacingOccurrences(of: "-", with: "-")
+            .replacingOccurrences(of: "+", with: "+")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        print("Formatted Expression: \(formattedExpression)") // Debugging input
+
+        // Validate that the formatted expression contains only valid characters
+        let validCharacters = CharacterSet(charactersIn: "0123456789.+-*/ ")
+        if formattedExpression.rangeOfCharacter(from: validCharacters.inverted) != nil {
+            print("Error: Invalid characters in expression")
+            return "Error"
+        }
+
+        // Explicitly handle division cases manually
+        if formattedExpression.contains("/") {
+            let components = formattedExpression.split(separator: "/").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            if components.count == 2,
+               let numerator = Double(components[0]),
+               let denominator = Double(components[1]) {
+                guard denominator != 0 else { return "Error" } // Division by zero
+                let result = numerator / denominator
+                print("Manual Division Result: \(result)") // Debugging output for manual division
+                return String(format: "%.12g", result)
+            }
+        }
+
+        // Add explicit casting to `Double` for all numerical components
+        let expressionWithCasts = formattedExpression
+            .components(separatedBy: " ")
+            .map { component in
+                if let _ = Double(component) {
+                    return "(\(component))" // Wrap numbers as `(number)` to enforce floating-point math
+                }
+                return component
+            }
+            .joined(separator: " ")
+
+        print("Expression with Casts: \(expressionWithCasts)") // Debugging input with casts
+
+        // Attempt to evaluate using `NSExpression`
+        let mathExpression = NSExpression(format: expressionWithCasts)
+        if let result = mathExpression.expressionValue(with: nil, context: nil) as? NSNumber {
+            print("NSExpression Result: \(result.doubleValue)") // Debugging output
+            return String(format: "%.12g", result.doubleValue) // Full precision result
+        } else {
+            print("Error: Unable to cast result to NSNumber")
+            return "Error"
+        }
+    }
+    
+    /*
+    func evaluateExpression(_ expression: String) -> String {
+        let formattedExpression = expression
+            .replacingOccurrences(of: "÷", with: "/")
+            .replacingOccurrences(of: "×", with: "*")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        print("Formatted Expression: \(formattedExpression)") // Debugging input
+        
+        // Split the expression into components for manual evaluation
+        let components = formattedExpression.split(separator: " ").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+        // Handle manual evaluation for division and multiplication
+        if components.count == 3 {
+            if let first = Double(components[0]),
+               let second = Double(components[2]) {
+                switch components[1] {
+                case "/":
+                    guard second != 0 else { return "Error" } // Handle division by zero
+                    let result = first / second
+                    print("Manual Division Debug: \(first) / \(second) = \(result)")
+                    return String(format: "%.12f", result) // Return full precision
+                case "*":
+                    let result = first * second
+                    print("Manual Multiplication Debug: \(first) * \(second) = \(result)")
+                    return String(format: "%.12f", result)
+                default:
+                    break
+                }
+            }
+        }
+        
+        // Fallback to `NSExpression`
+        let mathExpression = NSExpression(format: formattedExpression)
+        if let result = mathExpression.expressionValue(with: nil, context: nil) as? NSNumber {
+            print("NSExpression Result: \(result.doubleValue)")
+            return String(result.doubleValue)
+        }
+
+        return "Error"
+    }
+    */
+    
+    /* Works fine without 7/9
     func evaluateExpression(_ expression: String) -> String {
         // Replace mathematical symbols with `NSExpression`-compatible ones
         let formattedExpression = expression
@@ -92,6 +194,10 @@ class CalculatorEngine {
             return "Error"
         }
     }
+    */
+    
+    
+    
     /*
     func evaluateExpression(_ input: String) -> String {
         let sanitizedInput = input
