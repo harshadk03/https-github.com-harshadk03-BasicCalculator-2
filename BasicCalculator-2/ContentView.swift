@@ -177,6 +177,22 @@ struct MainCalculator: View {
         }
     }
     
+    private func isExpressionValid(_ expression: String) -> Bool {
+        // Define invalid patterns
+        let invalidPatterns = [
+            "\\.\\D",    // Decimal followed by a non-digit (e.g., ".+")
+            "\\d\\.+",   // Multiple decimals in one number
+            "\\D{2,}",   // Two or more non-digit characters in a row (e.g., "++")
+            "\\D$"       // Ends with a non-digit (e.g., "9+")
+        ]
+        for pattern in invalidPatterns {
+            if let _ = expression.range(of: pattern, options: .regularExpression) {
+                return false
+            }
+        }
+        return true
+    }
+    
     // MARK: - Button Actions
     private func clearOrDeleteInput() {
         if buttonLabel == "AC" {
@@ -241,14 +257,28 @@ struct MainCalculator: View {
     }
 
     private func calculateResult() {
-        if "+-×÷".contains(input.last ?? " ") || input.isEmpty {
-            input = "Error"
+        // Validate the expression before evaluating
+        if !isExpressionValid(input) {
+            input = "Error" // Show "Error" for invalid expressions
+            result = ""
+            isNewCalculation = true
+            return
+        }
+
+        // Try evaluating the expression
+        let evaluatedResult = engine.evaluateExpression(input)
+        
+        if evaluatedResult.isEmpty {
+            // On evaluation failure, reset to "0"
+            input = "0"
             result = ""
             isNewCalculation = true
         } else {
-            result = input
-            input = engine.evaluateExpression(input)
+            // On success, display the result
+            input = evaluatedResult
+            result = ""
             isNewCalculation = true
         }
     }
+
 }
